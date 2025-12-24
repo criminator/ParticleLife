@@ -55,14 +55,12 @@ function loop() {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-    // Add these lines here:
     const size = Math.min(canvas.clientWidth, canvas.clientHeight);
     const offsetX = (canvas.clientWidth - size) / 2;
     const offsetY = (canvas.clientHeight - size) / 2;
 
     for (let i = 0; i < n; i++) {
         ctx.beginPath();
-        // Change these two lines:
         const screenX = positionsX[i] * size + offsetX;
         const screenY = positionsY[i] * size + offsetY;
         
