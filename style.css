@@ -1,0 +1,45 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+#myCanvas {
+  flex: 1 1 auto;
+  width: 100%;
+  display: block;
+}
+
+#gui {
+  height: 120px;
+  flex-shrink: 0;
+  background: #111;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px;
+  font-family: sans-serif;
+  justify-content: center;
+}
+
+#gui label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+
+#gui input[type="range"] {
+  width: 140px;
+}
+
+#gui button {
+  padding: 6px 12px;
+  cursor: pointer;
+}
