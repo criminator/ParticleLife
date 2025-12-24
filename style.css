@@ -8,6 +8,7 @@ html, body {
 body {
   display: flex;
   flex-direction: column;
+
 }
 
 #myCanvas {
@@ -23,10 +24,28 @@ body {
   color: white;
   display: flex;
   align-items: center;
-  gap: 20px;
+  justify-content: space-between;
   padding: 10px;
   font-family: sans-serif;
-  justify-content: center;
+  position: relative;
+}
+
+#matrixContainer {
+    color: black;
+    position: absolute;
+    margin-right: auto;
+    left: 10px;
+    max-height: 100px;
+    overflow-y: auto;
+    font-size: 10px;
+}
+
+#controlsContainer {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    justify-content: center;
+    width: 100%;
 }
 
 #gui label {

@@ -18,7 +18,7 @@ const n = 1000;
 const dt = 0.01;
 const frictionHL = 0.040;
 let rMax = 0.1;
-const m = 6;
+const m = 5;
 let matrix = makeRandomMatrix();
 
 const frictionFactor = Math.pow(0.5, dt / frictionHL);
@@ -132,17 +132,65 @@ const radiusSlider = document.getElementById("radiusSlider");
 const forceValue = document.getElementById("forceValue");
 const radiusValue = document.getElementById("radiusValue");
 const randomizeBtn = document.getElementById("randomize");
+const pauseBtn = document.getElementById("pause");
 
 forceSlider.addEventListener("input", () => {
-  forceFactor = Number(forceSlider.value);
-  forceValue.textContent = forceFactor;
+    forceFactor = Number(forceSlider.value);
+    forceValue.textContent = forceFactor;
 });
 
 radiusSlider.addEventListener("input", () => {
-  rMax = Number(radiusSlider.value);
-  radiusValue.textContent = rMax.toFixed(2);
+    rMax = Number(radiusSlider.value);
+    radiusValue.textContent = rMax.toFixed(2);
 });
 
 randomizeBtn.addEventListener("click", () => {
-  matrix = makeRandomMatrix();
+    matrix = makeRandomMatrix();
+    renderMatrixEditor(matrix);
 });
+
+pauseBtn.addEventListener("click", () => {
+    if (pauseBtn.innerHTML === "Pause") {
+        forceFactor = 0;
+        pauseBtn.innerHTML = "Play";
+    } else {
+        forceFactor = Number(forceSlider.value);
+        pauseBtn.innerHTML = "Pause";
+    }
+
+});
+
+function renderMatrixEditor(matrix) {
+    const container = document.getElementById("matrixContainer");
+    container.innerHTML = ""; // clear previous content
+
+    container.style.display = "grid";
+    container.style.gridTemplateColumns = `repeat(${matrix.length}, 50px)`;
+    container.style.gap = "4px";
+
+    for (let i = 0; i < matrix.length; i++) {
+        for (let j = 0; j < matrix[i].length; j++) {
+
+            const cell = document.createElement("div");
+            cell.contentEditable = "true";
+            cell.textContent = matrix[i][j].toFixed(2);
+
+            cell.style.border = "1px solid #ccc";
+            cell.style.padding = "6px";
+            cell.style.textAlign = "center";
+            cell.style.background = "#fff";
+            cell.style.borderRadius = "4px";
+
+            // Update matrix when edited
+            cell.addEventListener("input", () => {
+                const value = parseFloat(cell.textContent);
+                if (!isNaN(value)) {
+                    matrix[i][j] = value;
+                }
+            });
+
+            container.appendChild(cell);
+        }
+    }
+}
+renderMatrixEditor(matrix);
