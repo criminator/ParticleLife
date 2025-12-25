@@ -14,11 +14,11 @@ resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
 
-const n = 1000;
+let n = 1000;
 const dt = 0.01;
 const frictionHL = 0.040;
 let rMax = 0.1;
-const m = 5;
+let m = 5;
 let matrix = makeRandomMatrix();
 
 const frictionFactor = Math.pow(0.5, dt / frictionHL);
@@ -158,6 +158,11 @@ pauseBtn.addEventListener("click", () => {
         pauseBtn.innerHTML = "Pause";
     }
 
+});
+
+particleSlider.addEventListener("input", () => {
+    n = Number(particleSlider.value);
+    particleValue.textContent = n;
 });
 
 function renderMatrixEditor(matrix) {
