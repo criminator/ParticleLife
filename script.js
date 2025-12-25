@@ -13,12 +13,11 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-
-let n = 1000;
+let n = 2000;
 const dt = 0.01;
 const frictionHL = 0.040;
 let rMax = 0.1;
-let m = 5;
+const m = 5;
 let matrix = makeRandomMatrix();
 
 const frictionFactor = Math.pow(0.5, dt / frictionHL);
