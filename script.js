@@ -1,6 +1,13 @@
 const canvas = document.getElementById("myCanvas");
 const ctx = canvas.getContext("2d");
 
+const dt = 0.01;
+const frictionHL = 0.040;
+let rMax = 0.1;
+const m = 5;
+let matrix = makeRandomMatrix();
+
+const frictionFactor = Math.pow(0.5, dt / frictionHL);
 function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = canvas.clientWidth * dpr;
@@ -9,18 +16,35 @@ function resizeCanvas() {
     ctx.scale(dpr, dpr); // Use scale instead of setTransform
 }
 
-
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-let n = 2000;
-const dt = 0.01;
-const frictionHL = 0.040;
-let rMax = 0.1;
-const m = 5;
-let matrix = makeRandomMatrix();
+let colors, positionsX, positionsY, velocitiesX, velocitiesY;
 
-const frictionFactor = Math.pow(0.5, dt / frictionHL);
+function initParticles(count) {
+    n = count;
+
+    colors = new Int32Array(n);
+    positionsX = new Float32Array(n);
+    positionsY = new Float32Array(n);
+    velocitiesX = new Float32Array(n);
+    velocitiesY = new Float32Array(n);
+
+    for (let i = 0; i < n; i++) {
+        colors[i] = Math.floor(Math.random() * m);
+        positionsX[i] = Math.random();
+        positionsY[i] = Math.random();
+        velocitiesX[i] = 0;
+        velocitiesY[i] = 0;
+    }
+}
+
+const particleSlider = document.getElementById("particleSlider");
+const particleValue = document.getElementById("particleValue");
+
+initParticles(Number(particleSlider.value));
+particleValue.textContent = particleSlider.value;
+
 
 function makeRandomMatrix() {
     const rows = [];
@@ -34,11 +58,6 @@ function makeRandomMatrix() {
     return rows;
 }
 
-const colors = new Int32Array(n);
-const positionsX = new Float32Array(n);
-const positionsY = new Float32Array(n);
-const velocitiesX = new Float32Array(n);
-const velocitiesY = new Float32Array(n);
 let forceFactor = 10;
 for (let i = 0; i < n; i++) {
     colors[i] = Math.floor(Math.random() * m);
@@ -132,6 +151,8 @@ const forceValue = document.getElementById("forceValue");
 const radiusValue = document.getElementById("radiusValue");
 const randomizeBtn = document.getElementById("randomize");
 const pauseBtn = document.getElementById("pause");
+const snakeButton = document.getElementById("snakePreset");
+
 
 forceSlider.addEventListener("input", () => {
     forceFactor = Number(forceSlider.value);
@@ -159,9 +180,24 @@ pauseBtn.addEventListener("click", () => {
 
 });
 
+snakeButton.addEventListener("click", () => {
+    for (let i = 0; i < m; i++) {
+        for (let j = 0; j < m; j++) {
+            if (i === j) {
+                matrix[i][j] = 1.0;
+            } else if (i === j - 1 || (j === 0 && i === m - 1)) {
+                matrix[i][j] = 0.2;
+            } else {
+                matrix[i][j] = 0.0;
+            }
+        }
+    }
+    renderMatrixEditor(matrix);
+});
+
 particleSlider.addEventListener("input", () => {
-    n = Number(particleSlider.value);
-    particleValue.textContent = n;
+    initParticles(Number(particleSlider.value));
+    particleValue.textContent = particleSlider.value;
 });
 
 function renderMatrixEditor(matrix) {
