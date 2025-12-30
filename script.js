@@ -14,7 +14,7 @@ function resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
     canvas.width = canvas.clientWidth * dpr;
     canvas.height = canvas.clientHeight * dpr;
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    // ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr); // Use scale instead of setTransform
 }
 
@@ -93,9 +93,9 @@ function loop() {
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-    // const size = Math.min(canvas.clientWidth, canvas.clientHeight);
-    // const offsetX = (canvas.clientWidth - size) / 2;
-    // const offsetY = (canvas.clientHeight - size) / 2;
+    // const size = Math.min(canvas.clientclientWidth, canvas.clientclientHeight);
+    // const offsetX = (canvas.clientclientWidth - size) / 2;
+    // const offsetY = (canvas.clientclientHeight - size) / 2;
 
     for (let i = 0; i < n; i++) {
         ctx.beginPath();
@@ -104,10 +104,10 @@ function loop() {
             f = 1 / (positionsZ[i] + 2);
         }
         const screenX = is3d
-            ? (f * positionsX[i] + 1) * 0.5 * canvas.width : positionsX[i] * canvas.width;
+            ? (f * positionsX[i] + 1) * 0.5 * canvas.clientWidth : positionsX[i] * canvas.clientWidth;
 
         const screenY = is3d
-            ? (f * positionsY[i] + 1) * 0.5 * canvas.height : positionsY[i] * canvas.height;
+            ? (f * positionsY[i] + 1) * 0.5 * canvas.clientHeight : positionsY[i] * canvas.clientHeight;
 
         ctx.globalAlpha = is3d ? Math.min(1, f * 1.3) : 1; // for "depth"
         ctx.arc(screenX, screenY, 1.5, 0, 2 * Math.PI);
@@ -159,8 +159,10 @@ function updateParticles() {
     for (let i = 0; i < n; i++) {
         positionsX[i] += velocitiesX[i] * dt;
         positionsY[i] += velocitiesY[i] * dt;
-        positionsX[i] = (positionsX[i] + 1) % 1;
-        positionsY[i] = (positionsY[i] + 1) % 1;
+        while (positionsX[i] < 0) positionsX[i] += 1;
+        while (positionsX[i] >= 1) positionsX[i] -= 1;
+        while (positionsY[i] < 0) positionsY[i] += 1;
+        while (positionsY[i] >= 1) positionsY[i] -= 1;
     }
 }
 
