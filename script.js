@@ -6,6 +6,8 @@ const frictionHL = 0.040;
 let rMax = 0.1;
 const m = 5;
 let matrix = makeRandomMatrix();
+let is3d = false;
+const worldScale = 2.0;
 
 const frictionFactor = Math.pow(0.5, dt / frictionHL);
 function resizeCanvas() {
@@ -19,7 +21,7 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener("resize", resizeCanvas);
 
-let colors, positionsX, positionsY, velocitiesX, velocitiesY;
+let colors, positionsX, positionsY, positionsZ, velocitiesX, velocitiesY, velocitiesZ;
 
 function initParticles(count) {
     n = count;
@@ -39,6 +41,27 @@ function initParticles(count) {
     }
 }
 
+function initParticles3d(count) {
+    n = count;
+
+    colors = new Int32Array(n);
+    positionsX = new Float32Array(n);
+    positionsY = new Float32Array(n);
+    positionsZ = new Float32Array(n);
+    velocitiesX = new Float32Array(n);
+    velocitiesY = new Float32Array(n);
+    velocitiesZ = new Float32Array(n);
+
+    for (let i = 0; i < n; i++) {
+        colors[i] = Math.floor(Math.random() * m);
+        positionsX[i] = Math.random() * 2 - 1;
+        positionsY[i] = Math.random() * 2 - 1;
+        positionsZ[i] = Math.random() * 2 - 1;
+        velocitiesX[i] = 0;
+        velocitiesY[i] = 0;
+        velocitiesZ[i] = 0;
+    }
+}
 const particleSlider = document.getElementById("particleSlider");
 const particleValue = document.getElementById("particleValue");
 
@@ -59,32 +82,39 @@ function makeRandomMatrix() {
 }
 
 let forceFactor = 10;
-for (let i = 0; i < n; i++) {
-    colors[i] = Math.floor(Math.random() * m);
-    positionsX[i] = Math.random();
-    positionsY[i] = Math.random();
-    velocitiesX[i] = 0;
-    velocitiesY[i] = 0;
-}
 
 function loop() {
-    updateParticles();
+    if (is3d) {
+        updateParticles3d();
+    } else {
+        updateParticles();
+    }
 
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvas.clientWidth, canvas.clientHeight);
 
-    const size = Math.min(canvas.clientWidth, canvas.clientHeight);
-    const offsetX = (canvas.clientWidth - size) / 2;
-    const offsetY = (canvas.clientHeight - size) / 2;
+    // const size = Math.min(canvas.clientWidth, canvas.clientHeight);
+    // const offsetX = (canvas.clientWidth - size) / 2;
+    // const offsetY = (canvas.clientHeight - size) / 2;
 
     for (let i = 0; i < n; i++) {
         ctx.beginPath();
-        const screenX = positionsX[i] * size + offsetX;
-        const screenY = positionsY[i] * size + offsetY;
-        
+        let f = 1;
+        if (is3d) {
+            f = 1 / (positionsZ[i] + 2);
+        }
+        const screenX = is3d
+            ? (f * positionsX[i] + 1) * 0.5 * canvas.width : positionsX[i] * canvas.width;
+
+        const screenY = is3d
+            ? (f * positionsY[i] + 1) * 0.5 * canvas.height : positionsY[i] * canvas.height;
+
+        ctx.globalAlpha = is3d ? Math.min(1, f * 1.3) : 1; // for "depth"
         ctx.arc(screenX, screenY, 1.5, 0, 2 * Math.PI);
         ctx.fillStyle = `hsl(${360 * (colors[i] / m)},80%,75%)`;
         ctx.fill();
+        ctx.globalAlpha = 1;
+
     }
 
     requestAnimationFrame(loop);
@@ -134,6 +164,65 @@ function updateParticles() {
     }
 }
 
+function updateParticles3d() {
+    for (let i = 0; i < n; i++) {
+        let totalForceX = 0;
+        let totalForceY = 0;
+        let totalForceZ = 0;
+
+        for (let j = 0; j < n; j++) {
+            if (j == i) continue;
+            let rx = positionsX[j] - positionsX[i];
+            let ry = positionsY[j] - positionsY[i];
+            let rz = positionsZ[j] - positionsZ[i];
+
+            if (rx > 1) rx -= 2;
+            if (rx < -1) rx += 2;
+
+            if (ry > 1) ry -= 2;
+            if (ry < -1) ry += 2;
+
+            if (rz > 1) rz -= 2;
+            if (rz < -1) rz += 2;
+
+            const r = Math.sqrt(rx*rx + ry*ry + rz*rz); // sqrt(rx^2 + ry^2 + rz^2) => finds distance between particles (3d)
+            if (r > 0 && r < rMax) {
+                const f = force(r / rMax, matrix[colors[i]][colors[j]]);
+                totalForceX += rx / r * f; // Force amount, sends in direction of the vector by normalizing it
+                totalForceY += ry / r * f;
+                totalForceZ += rz / r * f;
+            }
+
+        }
+
+        totalForceX *= rMax * forceFactor;
+        totalForceY *= rMax * forceFactor;
+        totalForceZ *= rMax * forceFactor;
+
+        velocitiesX[i] *= frictionFactor;
+        velocitiesY[i] *= frictionFactor;
+        velocitiesZ[i] *= frictionFactor;
+
+        velocitiesX[i] += totalForceX * dt;
+        velocitiesY[i] += totalForceY * dt;
+        velocitiesZ[i] += totalForceZ * dt;
+    }
+
+    for (let i = 0; i < n; i++) {
+        positionsX[i] += velocitiesX[i] * dt;
+        positionsY[i] += velocitiesY[i] * dt;
+        positionsZ[i] += velocitiesZ[i] * dt;
+        while (positionsX[i] > 1) positionsX[i] -= 2;
+        while (positionsX[i] < -1) positionsX[i] += 2;
+        while (positionsY[i] > 1) positionsY[i] -= 2;
+        while (positionsY[i] < -1) positionsY[i] += 2;
+        while (positionsZ[i] > 1) positionsZ[i] -= 2;
+        while (positionsZ[i] < -1) positionsZ[i] += 2;
+        // positionsX[i] = ((positionsX[i] + 1) % 2) - 1;
+        // positionsY[i] = ((positionsY[i] + 1) % 2) - 1;
+        // positionsZ[i] = ((positionsZ[i] + 1) % 2) - 1;
+    }
+}
 function force(r, a) {
     const beta = 0.3;
     if (r < beta) {
@@ -152,6 +241,7 @@ const radiusValue = document.getElementById("radiusValue");
 const randomizeBtn = document.getElementById("randomize");
 const pauseBtn = document.getElementById("pause");
 const snakeButton = document.getElementById("snakePreset");
+const dimButton = document.getElementById("dimButton");
 
 
 forceSlider.addEventListener("input", () => {
@@ -168,6 +258,27 @@ randomizeBtn.addEventListener("click", () => {
     matrix = makeRandomMatrix();
     renderMatrixEditor(matrix);
 });
+
+dimButton.addEventListener("click", () => {
+    is3d = !is3d;
+    if (is3d) {
+        rMax = 0.4;
+        radiusSlider.min = 0.1;
+        radiusSlider.max = 1.0;
+        radiusSlider.value = 0.4;
+        radiusValue.textContent = "0.40";
+        initParticles3d(Number(particleSlider.value));
+    } else {
+        rMax = 0.1;
+        radiusSlider.min = 0.02;
+        radiusSlider.max = 0.3;
+        radiusSlider.value = 0.1;
+        radiusValue.textContent = "0.10";
+        initParticles(Number(particleSlider.value));
+    }
+    dimButton.innerHTML = (is3d) ? "Make 2D" : "Make 3D";
+});
+
 
 pauseBtn.addEventListener("click", () => {
     if (pauseBtn.innerHTML === "Pause") {
@@ -196,8 +307,13 @@ snakeButton.addEventListener("click", () => {
 });
 
 particleSlider.addEventListener("input", () => {
-    initParticles(Number(particleSlider.value));
-    particleValue.textContent = particleSlider.value;
+    const count = Number(particleSlider.value);
+    if (is3d) {
+        initParticles3d(count);
+    } else {
+        initParticles(count);
+    }
+    particleValue.textContent = count;
 });
 
 function renderMatrixEditor(matrix) {
